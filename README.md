@@ -74,7 +74,39 @@ Field types (per brief):
 The `triage` object is an **additive extra** on top of the brief's schema;
 delete the field from `ExtractionResponse` if a strict match is ever needed.
 
+### `POST /api/explain`
+
+```json
+{ "text": "2 mahine se period nahi aaya, acne bhi hai" }
+```
+
+```json
+{
+  "language_detected": "hi",
+  "source": "llm",
+  "explanation_source": "llm",
+  "explanation": "... patterns commonly associated with irregular cycles ... thyroid issues, pregnancy, anaemia (anemia) or stress ... worth discussing with a doctor ...\n\nयह जानकारी केवल जागरूकता के लिए है...",
+  "disclaimer": "यह जानकारी केवल जागरूकता के लिए है, चिकित्सा निदान नहीं है। कृपया किसी योग्य डॉक्टर से परामर्श करें।",
+  "fallback_notice": null
+}
+```
+
+The explanation uses only the allowed phrasing, always lists alternatives to
+PCOS, never percentages or a diagnosis, and always ends with the disclaimer
+(localised for hi/kn/ta/te). `ExplanationValidator` re-checks the LLM output
+and swaps in a safe template if forbidden phrasing slips through.
+
 `GET /api/health` → `{"status":"ok"}`. Blank/missing `text` → HTTP 400.
+
+### Fallback notice
+
+Both responses carry `source` (`"llm"` or `"offline_fallback"`) and, when the
+LLM call failed or was rate-limited, a visible `fallback_notice` explaining
+that answers come from the offline keyword extractor. Demo it locally:
+
+```bash
+java -jar target/yajnaseni-0.1.0.jar --sakhi.llm.fail=true
+```
 
 ## Pipeline
 
@@ -87,13 +119,26 @@ delete the field from `ExtractionResponse` if a strict match is ever needed.
    converted to ASCII. `language_detected` comes from Unicode script ranges +
    the languages of transliterated matches ("mixed" when more than one).
 2. **LLM extraction** ([LlmExtractionClient.java](src/main/java/com/yajnaseni/llm/LlmExtractionClient.java))
-   — the interface a real OpenAI/Gemini client will implement. The current
+   — the interface a real OpenAI/Gemini client will implement, fed by
+   [ExtractionPromptTemplate.java](src/main/java/com/yajnaseni/llm/prompt/ExtractionPromptTemplate.java)
+   (exact schema, *return null for anything not mentioned*, *never guess*).
+   The current
    [MockLlmExtractionClient](src/main/java/com/yajnaseni/llm/MockLlmExtractionClient.java)
    returns the canned sample from
    [mock-llm-response.json](src/main/resources/mock/mock-llm-response.json)
    (45-day gap, 2 months amenorrhea, acne, hair thinning, weight gain, dark
    patches…), with keyword overrides: pregnancy words → `possible_pregnancy=true`,
-   heavy/so-much bleeding or fainting → `heavy_bleeding=true`.
+   heavy/so-much bleeding → `heavy_bleeding=true`.
+   **2b. Automatic fallback** — if that call throws or is rate-limited (429),
+   [OfflineKeywordExtractor.java](src/main/java/com/yajnaseni/offline/OfflineKeywordExtractor.java)
+   fills the schema minimally from keywords only (red flags: heavy bleeding,
+   severe pain, missed period, pregnancy) and the response gets a visible
+   `fallback_notice`.
+   **2c. Explanation** —
+   [ExplanationPromptTemplate.java](src/main/java/com/yajnaseni/llm/prompt/ExplanationPromptTemplate.java)
+   (allowed phrasing, alternatives to PCOS, no percentages, disclaimer) +
+   [ExplanationValidator.java](src/main/java/com/yajnaseni/service/ExplanationValidator.java)
+   (strips forbidden phrasing like "you have", "definitely", percentages).
 3. **Triage engine** ([TriageEngine.java](src/main/java/com/yajnaseni/triage/TriageEngine.java))
    — first matching rule wins:
 
@@ -104,14 +149,31 @@ delete the field from `ExtractionResponse` if a strict match is ever needed.
    | `routine_check_up` | **single mild symptom** with a regular cycle |
  | `cautious` | **default** — unclear information or no rule matches exactly |
 
+## Test inputs (5 languages)
+
+Shared fixtures in [SakhiTestInputs.java](src/test/java/com/yajnaseni/SakhiTestInputs.java):
+
+| Language | Input | Offline extraction |
+|---|---|---|
+| Kannada | ನನಗೆ ತಿಂಗಳ ಚಕ್ರ ಸರಿಯಾಗಿ ಇಲ್ಲ | nothing explicit → all null (no guessing) |
+| Hindi | 3 महिने से पीरियड नहीं आया | `months_without_period: 3` |
+| Tamil | எனக்கு மாதவிடாய் தாமதமாகிறது | nothing numeric → null |
+| Telugu | నా పీరియడ్స్ మూడు నెలలుగా రావడం లేదు | `months_without_period: 3` (number word మూడు → 3) |
+| Hinglish | Periods late hai aur acne bhi hai | `acne: true` |
+
 ## Tests
 
-`mvn test` — 41 tests:
+`mvn test` — 81 tests:
 
 - [TriageEngineTest](src/test/java/com/yajnaseni/triage/TriageEngineTest.java) — one test per triage rule plus boundary cases (35 vs 36 days, 3 months with/without other signs, precedence).
-- [GlossaryNormalizerTest](src/test/java/com/yajnaseni/glossary/GlossaryNormalizerTest.java) — all four languages in script and transliteration, longest-match ("nalla thol" vs "thol"), word boundaries, mixed-language detection, digit conversion.
+- [GlossaryNormalizerTest](src/test/java/com/yajnaseni/glossary/GlossaryNormalizerTest.java) — all four languages in script and transliteration, longest-match ("nalla thol" vs "thol"), word boundaries, mixed-language detection, digit and number-word conversion.
+- [ExtractionPromptTemplateTest](src/test/java/com/yajnaseni/llm/prompt/ExtractionPromptTemplateTest.java) — schema fields, null/never-guess rules, renders all 5 sample inputs.
+- [ExplanationPromptTemplateTest](src/test/java/com/yajnaseni/llm/prompt/ExplanationPromptTemplateTest.java) — allowed phrasing, alternatives, no-percent rule, disclaimers per language.
+- [ExplanationValidatorTest](src/test/java/com/yajnaseni/service/ExplanationValidatorTest.java) — forbidden phrasing replaced with safe template, disclaimer guaranteed.
+- [OfflineKeywordExtractorTest](src/test/java/com/yajnaseni/offline/OfflineKeywordExtractorTest.java) — the 5 sample inputs plus red flags (heavy bleeding, severe pain, missed period, pregnancy, fainting).
+- [ExtractionFallbackTest](src/test/java/com/yajnaseni/service/ExtractionFallbackTest.java) — LLM failure/rate-limit → offline fallback with visible notice.
 - [MockLlmExtractionClientTest](src/test/java/com/yajnaseni/llm/MockLlmExtractionClientTest.java) — sample values and keyword overrides.
-- [ExtractControllerTest](src/test/java/com/yajnaseni/api/ExtractControllerTest.java) — full HTTP contract of `/api/extract`.
+- [ExtractControllerTest](src/test/java/com/yajnaseni/api/ExtractControllerTest.java) / [ExplainControllerTest](src/test/java/com/yajnaseni/api/ExplainControllerTest.java) — full HTTP contracts.
 
 ## Wiring a real LLM later
 
