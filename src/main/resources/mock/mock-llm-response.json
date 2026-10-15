@@ -1,0 +1,18 @@
+{
+  "symptoms": {
+    "cycle_gap_days": 45,
+    "months_without_period": 2,
+    "acne": true,
+    "excess_facial_or_body_hair": true,
+    "hair_thinning": true,
+    "weight_change": "gain",
+    "dark_skin_patches": true,
+    "pelvic_pain": "mild",
+    "heavy_bleeding": false,
+    "possible_pregnancy": false
+  },
+  "unclear_items": [
+    "Could not tell whether hair thinning started suddenly or gradually",
+    "Exact number of days between periods was not stated"
+  ]
+}

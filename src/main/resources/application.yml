@@ -1,0 +1,13 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: yajnaseni
+
+sakhi:
+  llm:
+    # "mock" returns the canned sample extraction; swap in a real LLM client later.
+    mode: mock
+    # set true to simulate an unavailable LLM API and demo the offline fallback
+    fail: false
