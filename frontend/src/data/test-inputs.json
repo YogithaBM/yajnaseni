@@ -1,0 +1,162 @@
+[
+  {
+    "id": "kn-1",
+    "language": "kn",
+    "title": "Irregular cycle, no red flags",
+    "text": "ನನಗೆ ತಿಂಗಳ ಚಕ್ರ ಸರಿಯಾಗಿ ಇಲ್ಲ",
+    "tags": ["baseline", "irregular-cycle"],
+    "expect": "no numbers, no red flags; period keyword only"
+  },
+  {
+    "id": "kn-2",
+    "language": "kn",
+    "title": "Red flag: heavy bleeding",
+    "text": "ಹೆಚ್ಚು ರಕ್ತಸ್ರಾವ ಆಗುತ್ತಿದೆ, ದಿನಕ್ಕೆ ಎರಡು ಬಾರಿ ಪ್ಯಾಡ್ ಬದಲಿಸಬೇಕು",
+    "tags": ["red-flag", "heavy-bleeding"],
+    "expect": "heavy_bleeding=true -> emergency"
+  },
+  {
+    "id": "kn-3",
+    "language": "kn",
+    "title": "Red flag: missed period (3 months)",
+    "text": "ಮೂರು ತಿಂಗಳು ಹಿಂದೆ period ಬಂದಿಲ್ಲ",
+    "tags": ["red-flag", "missed-period"],
+    "expect": "months_without_period=3 (number word mooru)"
+  },
+  {
+    "id": "kn-4",
+    "language": "kn",
+    "title": "Red flag: pregnancy + missed period",
+    "text": "ಮೂರು ತಿಂಗಳು period ಬಂದಿಲ್ಲ, ನನಗೆ ಗರ್ಭ ಆಗಿದೆ",
+    "tags": ["red-flag", "pregnancy", "missed-period"],
+    "expect": "months_without_period=3 + possible_pregnancy=true -> emergency"
+  },
+  {
+    "id": "hi-1",
+    "language": "hi",
+    "title": "Slightly late, no red flags",
+    "text": "Period thoda late hai par koi dard nahi hai",
+    "tags": ["baseline"],
+    "expect": "no numbers, no red flags"
+  },
+  {
+    "id": "hi-2",
+    "language": "hi",
+    "title": "Red flag: heavy bleeding",
+    "text": "Aaj bahut bleeding ho rahi hai, har ghante pad badalna pad raha hai",
+    "tags": ["red-flag", "heavy-bleeding"],
+    "expect": "bleeding + intensifier bahut -> heavy_bleeding=true -> emergency"
+  },
+  {
+    "id": "hi-3",
+    "language": "hi",
+    "title": "Red flag: severe pain",
+    "text": "pet dard bahut tej hai, seh nahi pa rahi",
+    "tags": ["red-flag", "severe-pain"],
+    "expect": "pelvic_pain=severe (pain + intensifier bahut) -> emergency"
+  },
+  {
+    "id": "hi-4",
+    "language": "hi",
+    "title": "Red flag: missed period (3 months)",
+    "text": "3 महिने से पीरियड नहीं आया",
+    "tags": ["red-flag", "missed-period"],
+    "expect": "months_without_period=3"
+  },
+  {
+    "id": "ta-1",
+    "language": "ta",
+    "title": "Delayed period, no red flags",
+    "text": "எனக்கு மாதவிடாய் தாமதமாகிறது",
+    "tags": ["baseline"],
+    "expect": "no numbers, no red flags"
+  },
+  {
+    "id": "ta-2",
+    "language": "ta",
+    "title": "Red flag: heavy bleeding",
+    "text": "இந்த முறை அதிக ரத்தப்போக்கு வருது",
+    "tags": ["red-flag", "heavy-bleeding"],
+    "expect": "heavy_bleeding=true -> emergency"
+  },
+  {
+    "id": "ta-3",
+    "language": "ta",
+    "title": "Red flag: severe pain",
+    "text": "romba vayiru vali irukku, school povatha madhiri irukku",
+    "tags": ["red-flag", "severe-pain"],
+    "expect": "pelvic_pain=severe (pain + intensifier romba) -> emergency"
+  },
+  {
+    "id": "ta-4",
+    "language": "ta",
+    "title": "Red flag: pregnancy + missed period",
+    "text": "3 மாதங்கள் period varala, karppam aagiruchu",
+    "tags": ["red-flag", "pregnancy", "missed-period"],
+    "expect": "months_without_period=3 + possible_pregnancy=true -> emergency"
+  },
+  {
+    "id": "te-1",
+    "language": "te",
+    "title": "Red flag: missed period (3 months)",
+    "text": "నా పీరియడ్స్ మూడు నెలలుగా రావడం లేదు",
+    "tags": ["red-flag", "missed-period"],
+    "expect": "months_without_period=3 (number word moodu)"
+  },
+  {
+    "id": "te-2",
+    "language": "te",
+    "title": "Red flag: heavy bleeding",
+    "text": "ekkuva raktasravam vastundi, pads marustunnanu",
+    "tags": ["red-flag", "heavy-bleeding"],
+    "expect": "heavy_bleeding=true -> emergency"
+  },
+  {
+    "id": "te-3",
+    "language": "te",
+    "title": "Red flag: severe pain",
+    "text": "chala kadupu noppi undi, school ki vellalekapothunna",
+    "tags": ["red-flag", "severe-pain"],
+    "expect": "pelvic_pain=severe (pain + intensifier chala) -> emergency"
+  },
+  {
+    "id": "te-4",
+    "language": "te",
+    "title": "Red flag: pregnancy + missed period",
+    "text": "3 nelalu period raledu, garbham vachindi",
+    "tags": ["red-flag", "pregnancy", "missed-period"],
+    "expect": "months_without_period=3 + possible_pregnancy=true -> emergency"
+  },
+  {
+    "id": "hg-1",
+    "language": "hinglish",
+    "title": "Late period with acne",
+    "text": "Periods late hai aur acne bhi hai",
+    "tags": ["baseline"],
+    "expect": "acne=true; single mild symptom with regular cycle -> routine_check_up"
+  },
+  {
+    "id": "hg-2",
+    "language": "hinglish",
+    "title": "Red flag: heavy bleeding",
+    "text": "periods mein bahut heavy bleeding ho rahi hai",
+    "tags": ["red-flag", "heavy-bleeding"],
+    "expect": "heavy_bleeding=true -> emergency"
+  },
+  {
+    "id": "hg-3",
+    "language": "hinglish",
+    "title": "Red flag: severe pain",
+    "text": "lower abdominal pain is very bad today",
+    "tags": ["red-flag", "severe-pain"],
+    "expect": "pelvic_pain=severe (pain + intensifier very bad) -> emergency"
+  },
+  {
+    "id": "hg-4",
+    "language": "hinglish",
+    "title": "Red flag: pregnancy + missed period",
+    "text": "3 mahine se periods nahi aaye, I think I am pregnant",
+    "tags": ["red-flag", "pregnancy", "missed-period"],
+    "expect": "months_without_period=3 + possible_pregnancy=true -> emergency"
+  }
+]

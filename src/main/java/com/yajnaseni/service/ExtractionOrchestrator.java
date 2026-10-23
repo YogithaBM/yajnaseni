@@ -9,7 +9,6 @@ import com.yajnaseni.glossary.NormalizationResult;
 import com.yajnaseni.llm.LlmExplanationClient;
 import com.yajnaseni.llm.LlmExtractionClient;
 import com.yajnaseni.llm.prompt.ExplanationPromptTemplate;
-import com.yajnaseni.llm.prompt.ExtractionPromptTemplate;
 import com.yajnaseni.model.SymptomExtraction;
 import com.yajnaseni.offline.OfflineKeywordExtractor;
 import com.yajnaseni.triage.TriageEngine;

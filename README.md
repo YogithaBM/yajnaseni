@@ -13,11 +13,43 @@ and runs a **rule-based triage engine**.
   machine; any Maven works)
 
 ```bash
-mvn test          # 41 unit/integration tests
+mvn test          # 85 unit/integration tests
 mvn spring-boot:run
 # or
 mvn -DskipTests package && java -jar target/yajnaseni-0.1.0.jar
 ```
+
+## Quick start (fresh clone)
+
+```bash
+git clone <repo> && cd yajnaseni
+scripts/fresh-clone-test.sh   # backend tests + frontend tests + build + smoke + evidence table
+```
+
+Individual helper scripts:
+
+| Script | What it does |
+|---|---|
+| `scripts/fresh-clone-test.sh` | Runs every check from a clean checkout; exits non-zero on failure |
+| `scripts/generate-evidence.sh` | Starts the backend with a failing LLM and regenerates `docs/failure-case-evidence.md` from the 20 test inputs |
+
+## Frontend (React)
+
+See [frontend/README.md](frontend/README.md) for full details.
+
+```bash
+cd frontend
+npm install
+npm run dev        # http://localhost:5173 (backend must be running on :8080)
+npm test           # 47 component/unit tests
+```
+
+The UI provides the editable symptom chips, period calendar with
+deterministic cycle-irregularity maths, triage badge, Web Speech voice input
+(kn-IN/hi-IN/ta-IN/te-IN), the plain-language explanation with its mandatory
+disclaimer, a printable English doctor summary, and the "No data is stored."
+privacy notice. Copy `frontend/.env.example` to `frontend/.env` to point it at
+a different backend URL.
 
 ## API
 
@@ -163,7 +195,7 @@ Shared fixtures in [SakhiTestInputs.java](src/test/java/com/yajnaseni/SakhiTestI
 
 ## Tests
 
-`mvn test` — 81 tests:
+`mvn test` — 85 tests:
 
 - [TriageEngineTest](src/test/java/com/yajnaseni/triage/TriageEngineTest.java) — one test per triage rule plus boundary cases (35 vs 36 days, 3 months with/without other signs, precedence).
 - [GlossaryNormalizerTest](src/test/java/com/yajnaseni/glossary/GlossaryNormalizerTest.java) — all four languages in script and transliteration, longest-match ("nalla thol" vs "thol"), word boundaries, mixed-language detection, digit and number-word conversion.
