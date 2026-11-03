@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage.jsx';
 import SymptomPage from './pages/SymptomPage.jsx';
 import CalendarPage from './pages/CalendarPage.jsx';
 import SummaryPage from './pages/SummaryPage.jsx';
+import AboutPage from './pages/AboutPage.jsx';
 import { AppProvider } from './context/AppContext.jsx';
 
 /**
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="/symptoms" element={<SymptomPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/summary" element={<SummaryPage />} />
+            <Route path="/about" element={<AboutPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Box>

@@ -23,7 +23,7 @@ const MONTH_NAMES = [
 /**
  * Period calendar: the user taps recent period start dates. Cycle regularity
  * is computed deterministically in JS (see lib/cycleStats.js) - no LLM.
- * Dates live in component state only: nothing is stored.
+ * Dates are saved in browser localStorage (via AppContext) - never sent to a server.
  */
 export default function PeriodCalendar({ dates, onToggle, onClear }) {
   const now = new Date();
@@ -50,18 +50,28 @@ export default function PeriodCalendar({ dates, onToggle, onClear }) {
     <section className="card" aria-labelledby="calendar-title">
       <h2 id="calendar-title">Period calendar</h2>
       <p className="hint">
-        Tap the start date of each recent period. Irregularity is calculated
-        here in your browser - nothing is stored.
+        Tap the start date of each recent period. Today is highlighted. Future dates are disabled.
+        Dates stay in your browser only.
       </p>
 
       <div className="calendar-nav">
-        <button type="button" onClick={() => shiftMonth(-1)} aria-label="Previous month">
+        <button
+          type="button"
+          onClick={() => shiftMonth(-1)}
+          aria-label="Previous month"
+          style={{ minHeight: 44, minWidth: 44 }}
+        >
           ◀
         </button>
         <span className="calendar-month">
           {MONTH_NAMES[view.month]} {view.year}
         </span>
-        <button type="button" onClick={() => shiftMonth(1)} aria-label="Next month">
+        <button
+          type="button"
+          onClick={() => shiftMonth(1)}
+          aria-label="Next month"
+          style={{ minHeight: 44, minWidth: 44 }}
+        >
           ▶
         </button>
       </div>
@@ -77,14 +87,26 @@ export default function PeriodCalendar({ dates, onToggle, onClear }) {
           const iso = isoOf(view.year, view.month, day);
           const isSelected = selected.has(iso);
           const isFuture = iso > today;
+          const isToday = iso === today;
+
+          let cellClass = 'calendar-cell';
+          if (isSelected) cellClass += ' cell-selected';
+          if (isToday) cellClass += ' cell-today';
+          if (isFuture) cellClass += ' cell-future';
+
+          const label = iso
+            + (isToday ? ' (today)' : '')
+            + (isSelected ? ' (period start)' : '')
+            + (isFuture ? ' (future, disabled)' : '');
+
           return (
             <button
               key={iso}
               type="button"
               disabled={isFuture}
-              className={`calendar-cell ${isSelected ? 'cell-selected' : ''} ${isFuture ? 'cell-future' : ''}`}
+              className={cellClass}
               aria-pressed={isSelected}
-              aria-label={iso + (isSelected ? ' (period start)' : '')}
+              aria-label={label}
               onClick={() => onToggle(iso)}
             >
               {day}
@@ -113,8 +135,13 @@ export default function PeriodCalendar({ dates, onToggle, onClear }) {
           ))}
         </ul>
         {dates.length > 0 && (
-          <button type="button" className="link-button" onClick={onClear}>
-            Clear dates
+          <button
+            type="button"
+            className="link-button"
+            onClick={onClear}
+            style={{ minHeight: 44, padding: '8px 0' }}
+          >
+            Clear marked dates
           </button>
         )}
       </div>

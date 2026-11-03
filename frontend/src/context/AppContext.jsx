@@ -8,12 +8,13 @@ import {
 import * as api from '../api.js';
 import { CHIPS } from '../lib/constants.js';
 import { computeCycleStats } from '../lib/cycleStats.js';
+import { getTranslation } from '../data/translations.js';
 
 /**
  * App-wide state shared by every route: what the user typed, the symptoms the
  * assistant understood (and the user confirmed/edited), the tappable calendar
- * dates and the backend explanation. Living above the router means moving
- * between pages never loses input.
+ * dates (stored in localStorage) and the backend explanation. Living above the
+ * router means moving between pages never loses input.
  */
 const AppStateContext = createContext(null);
 
@@ -29,6 +30,25 @@ function initAnswers(symptoms) {
 }
 
 export function AppProvider({ children }) {
+  const [lang, setLangState] = useState(() => {
+    try {
+      return localStorage.getItem('sakhi_lang') || 'en';
+    } catch (e) {
+      return 'en';
+    }
+  });
+
+  const setLang = useCallback((nextLang) => {
+    setLangState(nextLang);
+    try {
+      localStorage.setItem('sakhi_lang', nextLang);
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  const t = useCallback((key) => getTranslation(lang, key), [lang]);
+
   const [text, setText] = useState('');
   const [voiceLocale, setVoiceLocale] = useState('hi-IN');
   const [status, setStatus] = useState('idle'); // idle | loading | done | error
@@ -36,7 +56,16 @@ export function AppProvider({ children }) {
   const [extraction, setExtraction] = useState(null);
   const [explanation, setExplanation] = useState(null);
   const [answers, setAnswers] = useState(null);
-  const [periodDates, setPeriodDates] = useState([]); // in-memory only
+
+  // Period dates: in browser localStorage only, never sent to server for storage
+  const [periodDates, setPeriodDates] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sakhi_period_dates');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
 
   const cycleStats = useMemo(() => computeCycleStats(periodDates), [periodDates]);
 
@@ -53,12 +82,39 @@ export function AppProvider({ children }) {
 
   const toggleDate = useCallback((iso) => {
     setPeriodDates((prev) => {
-      if (prev.includes(iso)) return prev.filter((d) => d !== iso);
-      return [...prev, iso].sort();
+      const next = prev.includes(iso) ? prev.filter((d) => d !== iso) : [...prev, iso].sort();
+      try {
+        localStorage.setItem('sakhi_period_dates', JSON.stringify(next));
+      } catch (e) {
+        // ignore
+      }
+      return next;
     });
   }, []);
 
-  const clearDates = useCallback(() => setPeriodDates([]), []);
+  const clearDates = useCallback(() => {
+    setPeriodDates([]);
+    try {
+      localStorage.removeItem('sakhi_period_dates');
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  const clearAllData = useCallback(() => {
+    setText('');
+    setStatus('idle');
+    setError(null);
+    setExtraction(null);
+    setExplanation(null);
+    setAnswers(null);
+    setPeriodDates([]);
+    try {
+      localStorage.removeItem('sakhi_period_dates');
+    } catch (e) {
+      // ignore
+    }
+  }, []);
 
   const analyze = useCallback(async (rawText) => {
     const input = typeof rawText === 'string' ? rawText : text;
@@ -82,6 +138,9 @@ export function AppProvider({ children }) {
   }, [text]);
 
   const value = useMemo(() => ({
+    lang,
+    setLang,
+    t,
     text,
     setText,
     voiceLocale,
@@ -96,9 +155,13 @@ export function AppProvider({ children }) {
     cycleStats,
     toggleDate,
     clearDates,
+    clearAllData,
     appendTranscript,
     analyze,
   }), [
+    lang,
+    setLang,
+    t,
     text,
     voiceLocale,
     status,
@@ -111,6 +174,7 @@ export function AppProvider({ children }) {
     cycleStats,
     toggleDate,
     clearDates,
+    clearAllData,
     appendTranscript,
     analyze,
   ]);

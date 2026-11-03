@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import App from './App.jsx';
 
 const extractionFixture = {
@@ -46,6 +47,14 @@ function mockFetch({ extract, explain } = {}) {
   });
 }
 
+function renderApp(initialRoute = '/symptoms') {
+  return render(
+    <MemoryRouter initialEntries={[initialRoute]}>
+      <App />
+    </MemoryRouter>
+  );
+}
+
 async function analyzeWith(text) {
   fireEvent.change(screen.getByLabelText('Describe your symptoms'), {
     target: { value: text },
@@ -56,6 +65,7 @@ async function analyzeWith(text) {
 
 describe('App', () => {
   beforeEach(() => {
+    localStorage.clear();
     vi.stubGlobal('fetch', mockFetch());
   });
 
@@ -64,12 +74,12 @@ describe('App', () => {
   });
 
   it('shows the privacy notice verbatim', () => {
-    render(<App />);
+    renderApp('/');
     expect(screen.getByTestId('privacy-notice')).toHaveTextContent('No data is stored.');
   });
 
   it('runs the full flow: triage badge, chips, explanation, disclaimer', async () => {
-    render(<App />);
+    renderApp('/symptoms');
     await analyzeWith('3 mahine se period nahi aaya');
 
     // Triage badge from backend rules
@@ -92,7 +102,7 @@ describe('App', () => {
     vi.stubGlobal('fetch', mockFetch({
       explain: { ...explanationFixture, explanation: 'Some short text.', disclaimer: '' },
     }));
-    render(<App />);
+    renderApp('/symptoms');
     await analyzeWith('acne hai');
     expect(screen.getByTestId('disclaimer')).toHaveTextContent(
       'This is information, not a diagnosis.',
@@ -101,7 +111,7 @@ describe('App', () => {
 
   it('shows a clear error when the backend is unreachable', async () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))));
-    render(<App />);
+    renderApp('/symptoms');
     fireEvent.change(screen.getByLabelText('Describe your symptoms'), {
       target: { value: 'period nahi aaya' },
     });
@@ -120,14 +130,14 @@ describe('App', () => {
         fallback_notice: 'AI extraction failed, so these answers come from the offline keyword extractor.',
       },
     }));
-    render(<App />);
+    renderApp('/symptoms');
     await analyzeWith('3 mahine se period nahi');
     expect(screen.getByText(/offline keyword extractor/)).toBeInTheDocument();
     expect(screen.getByText('Source: offline keyword extraction')).toBeInTheDocument();
   });
 
   it('marks a corrected chip as edited', async () => {
-    render(<App />);
+    renderApp('/symptoms');
     await analyzeWith('3 mahine se period nahi aaya');
 
     fireEvent.click(screen.getByRole('button', { name: /Acne: Yes/ }));
@@ -141,7 +151,7 @@ describe('App', () => {
   });
 
   it('renders the printable doctor summary with required sections', async () => {
-    render(<App />);
+    renderApp('/symptoms');
     await analyzeWith('3 mahine se period nahi aaya');
 
     expect(screen.getByRole('heading', { name: '1. Confirmed symptoms' })).toBeInTheDocument();
@@ -155,7 +165,7 @@ describe('App', () => {
   });
 
   it('computes calendar irregularity in JS without calling the backend', async () => {
-    render(<App />);
+    renderApp('/calendar');
     // Go to the previous month (fully in the past) and tap two start dates.
     fireEvent.click(screen.getByRole('button', { name: 'Previous month' }));
     const dayButtons = screen.getAllByRole('button').filter((b) =>

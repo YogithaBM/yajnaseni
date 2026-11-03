@@ -44,11 +44,13 @@ npm run dev        # http://localhost:5173 (backend must be running on :8080)
 npm test           # 47 component/unit tests
 ```
 
-The UI provides the editable symptom chips, period calendar with
-deterministic cycle-irregularity maths, triage badge, Web Speech voice input
-(kn-IN/hi-IN/ta-IN/te-IN), the plain-language explanation with its mandatory
-disclaimer, a printable English doctor summary, and the "No data is stored."
-privacy notice. Copy `frontend/.env.example` to `frontend/.env` to point it at
+The responsive UI provides a multi-page experience: Home (`/`), Check Symptoms
+(`/symptoms`), Period Calendar (`/calendar`), Doctor Summary (`/summary`), and
+About and Safety (`/about`). It features a responsive navigation header (with
+hamburger slide-in drawer for screens < 768px), language switching (English,
+Hindi, Kannada), editable symptom chips, period calendar with cycle analysis
+and localStorage persistence, Web Speech voice input, and printable doctor summary
+with print-optimized styles. Copy `frontend/.env.example` to `frontend/.env` to point it at
 a different backend URL.
 
 ## API
@@ -130,7 +132,39 @@ and swaps in a safe template if forbidden phrasing slips through.
 
 `GET /api/health` → `{"status":"ok"}`. Blank/missing `text` → HTTP 400.
 
-### Fallback notice
+### `POST /api/cycle/analyze`
+
+Calculates cycle metrics deterministically from user-entered period start dates.
+
+Request:
+
+```json
+{
+  "dates": ["2026-05-01", "2026-05-29", "2026-06-28"]
+}
+```
+
+Response:
+
+```json
+{
+  "number_of_cycles": 2,
+  "average_cycle_length": 29.0,
+  "shortest_cycle_length": 28,
+  "longest_cycle_length": 30,
+  "irregular": false,
+  "estimated_next_period_window": {
+    "start": "2026-07-25",
+    "expected": "2026-07-27",
+    "end": "2026-07-29",
+    "label": "estimate, cycles vary"
+  },
+  "prediction_label": "estimate, cycles vary",
+  "message": null
+}
+```
+
+If fewer than 2 cycles are logged, returns `"message": "need more data"`. If the backend is unreachable, the frontend computes the same metrics locally in the browser.
 
 Both responses carry `source` (`"llm"` or `"offline_fallback"`) and, when the
 LLM call failed or was rate-limited, a visible `fallback_notice` explaining

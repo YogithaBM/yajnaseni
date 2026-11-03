@@ -39,6 +39,11 @@ export function explain(text) {
   return postJson('/api/explain', { text });
 }
 
+/** POST /api/cycle/analyze -> cycle statistics & next period estimate */
+export function analyzeCycle(dates) {
+  return postJson('/api/cycle/analyze', { dates });
+}
+
 /** Convenience: run both calls in parallel. */
 export async function analyze(text) {
   const [extraction, explanation] = await Promise.all([extract(text), explain(text)]);

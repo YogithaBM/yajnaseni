@@ -13,6 +13,7 @@ import VoiceInput from '../components/VoiceInput.jsx';
 import TriageBadge from '../components/TriageBadge.jsx';
 import SymptomCard from '../components/SymptomCard.jsx';
 import ExplanationPanel from '../components/ExplanationPanel.jsx';
+import DoctorSummary from '../components/DoctorSummary.jsx';
 import { useAppState } from '../context/AppContext.jsx';
 import testInputs from '../data/test-inputs.json';
 
@@ -50,6 +51,7 @@ export default function SymptomPage() {
     extraction,
     explanation,
     answers,
+    cycleStats,
     setSymptom,
     appendTranscript,
     analyze,
@@ -172,9 +174,16 @@ export default function SymptomPage() {
             error={null}
           />
 
+          <DoctorSummary
+            answers={answers}
+            cycleStats={cycleStats}
+            reportedText={text}
+            ready={Boolean(answers)}
+          />
+
           {answers && (
-            <Button component={RouterLink} to="/summary" variant="outlined" fullWidth>
-              View printable doctor summary
+            <Button component={RouterLink} to="/summary" variant="outlined" fullWidth sx={{ mt: 2 }}>
+              Open full printable summary page
             </Button>
           )}
         </Box>
